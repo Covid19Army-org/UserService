@@ -1,11 +1,13 @@
 package com.covid19army.UserService.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.covid19army.UserService.models.User;
 import com.covid19army.UserService.repositories.UserRepository;
 import java.util.Optional;
 
+@Service
 public class UserService {
 
 	@Autowired
@@ -21,15 +23,15 @@ public class UserService {
 	
 	public User login(String mobileNumber, String clientIp) {
 		Optional<User> optionalUser = this.getUserByMobileNumber(mobileNumber);
+		User user = null;
 		if(!optionalUser.isPresent()) {
-			User user = new User();
+			user = new User();
 			user.setMobilenumber(mobileNumber);
 			user.setClientip(clientIp);
 			
-			user = _userRepository.save(user);
-			optionalUser.orElse(user);
+			user = _userRepository.save(user);			
 		}
 		
-		return optionalUser.get();
+		return optionalUser.orElse(user);
 	}
 }

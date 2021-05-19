@@ -1,5 +1,7 @@
 package com.covid19army.UserService.controllers;
 
+import java.util.Optional;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.modelmapper.ModelMapper;
@@ -47,7 +49,7 @@ public class UserController {
 	
 	@PostMapping("/login")
 	public ResponseEntity<UserResponseDto> findOrCreateUser(@RequestBody LoginRequestDto loginRequestDto,  HttpServletRequest request){
-		
+		logger.info("mobile number entered is: " + loginRequestDto.getMobileNumber());
 		User user = _userService.login(loginRequestDto.getMobileNumber(), request.getRemoteAddr());
 		
 		UserResponseDto userDto = _mapper.map(user, UserResponseDto.class);
@@ -57,20 +59,20 @@ public class UserController {
 	
 	@GetMapping("/{mobileNumber}")
 	public UserResponseDto get(@PathVariable String mobileNumber){
-		UserResponseDto dto = new UserResponseDto();
-		dto.setMobileNumber("9986534946");
-		dto.setUserid(1234567890L);
-		return dto;
+		Optional<User> optionalUser = _userService.getUserByMobileNumber(mobileNumber);
+		
+		
+		UserResponseDto userDto = optionalUser.isPresent()? 
+				_mapper.map(optionalUser.get(), UserResponseDto.class): null;
+		
+		return userDto;
 	}
 	
 	@PostMapping("/validateotp")
 	public TokenDto validateOtp(@RequestBody ValidateOtpRequestDto otpRequestDto, HttpServletRequest request){
-		UserResponseDto dto = new UserResponseDto();
-		dto.setMobileNumber("9986534946");
-		dto.setUserid(1234567890L);
+		//call otp validation client api
 		
-		UserTokenRequestDto userTokenRequestDto = new UserTokenRequestDto();
-		userTokenRequestDto.setUserName("9986534946");
+		UserTokenRequestDto userTokenRequestDto  = _mapper.map(otpRequestDto, UserTokenRequestDto.class);			
 		userTokenRequestDto.setClientIp(request.getRemoteAddr());
 		
 		// return access token
