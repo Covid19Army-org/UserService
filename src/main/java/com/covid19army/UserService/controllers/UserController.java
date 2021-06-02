@@ -25,6 +25,9 @@ import com.covid19army.UserService.dtos.UserTokenRequestDto;
 import com.covid19army.UserService.dtos.ValidateOtpRequestDto;
 import com.covid19army.UserService.models.User;
 import com.covid19army.UserService.services.UserService;
+import com.covid19army.core.common.clients.OtpServiceClient;
+import com.covid19army.core.dtos.OtpVerificationRequestDto;
+import com.covid19army.core.exceptions.ResourceNotFoundException;
 
 
 
@@ -38,6 +41,9 @@ public class UserController {
 	
 	@Autowired
 	TokenServiceClient _tokenServiceClient;
+	
+	@Autowired
+	OtpServiceClient _otpServiceClient;
 	
 	@Autowired
 	ModelMapper _mapper;
@@ -69,15 +75,22 @@ public class UserController {
 	}
 	
 	@PostMapping("/validateotp")
-	public TokenDto validateOtp(@RequestBody ValidateOtpRequestDto otpRequestDto, HttpServletRequest request){
+	public TokenDto validateOtp(@RequestBody OtpVerificationRequestDto otpRequestDto, HttpServletRequest request) 
+			throws ResourceNotFoundException{
 		//call otp validation client api
+		 TokenDto data = null;
+		var result = _otpServiceClient.validateOtp(otpRequestDto);
+		if(result) {
+			UserTokenRequestDto userTokenRequestDto  = _mapper.map(otpRequestDto, UserTokenRequestDto.class);			
+			userTokenRequestDto.setClientIp(request.getRemoteAddr());
+			
+			// return access token
+			  data = _tokenServiceClient.GetToken(userTokenRequestDto);
+			 logger.info(data.getToken());
+			 return data;
+		}
 		
-		UserTokenRequestDto userTokenRequestDto  = _mapper.map(otpRequestDto, UserTokenRequestDto.class);			
-		userTokenRequestDto.setClientIp(request.getRemoteAddr());
+		throw new ResourceNotFoundException("Invaid Otp.");
 		
-		// return access token
-		 TokenDto data = _tokenServiceClient.GetToken(userTokenRequestDto);
-		 logger.info(data.getToken());
-		return data;
 	}
 }
