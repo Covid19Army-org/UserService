@@ -11,13 +11,14 @@ import org.springframework.context.annotation.Import;
 
 import com.covid19army.UserService.client.TokenServiceClient;
 import com.covid19army.core.common.clients.OtpServiceClient;
+import com.covid19army.core.exceptions.GlobalExceptionHandler;
 import com.covid19army.core.mex.rabbitmq.RabbitMQConfig;
 import com.covid19army.core.mex.rabbitmq.RabbitMQSender;
 
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients(clients = {OtpServiceClient.class, TokenServiceClient.class})
-@Import(RabbitMQConfig.class)
+@Import({RabbitMQConfig.class, GlobalExceptionHandler.class})
 public class UserServiceApplication {
 
 	public static void main(String[] args) {
