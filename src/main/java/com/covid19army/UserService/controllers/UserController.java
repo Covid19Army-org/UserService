@@ -28,6 +28,7 @@ import com.covid19army.UserService.services.UserService;
 import com.covid19army.core.common.clients.OtpServiceClient;
 import com.covid19army.core.dtos.OtpVerificationRequestDto;
 import com.covid19army.core.exceptions.ResourceNotFoundException;
+import com.covid19army.core.extensions.HttpServletRequestExtension;
 
 
 
@@ -48,9 +49,17 @@ public class UserController {
 	@Autowired
 	ModelMapper _mapper;
 	
+	@Autowired
+	HttpServletRequestExtension _requestExtension;
+	
 	@GetMapping("/health")
 	public String health() {
 		return "am running!";
+	}
+	
+	@GetMapping("/header")
+	public String header(HttpServletRequest request) {
+		return "received" + _requestExtension.getAuthenticatedUser();
 	}
 	
 	@PostMapping("/login")
@@ -81,7 +90,8 @@ public class UserController {
 		 TokenDto data = null;
 		var result = _otpServiceClient.validateOtp(otpRequestDto);
 		if(result) {
-			UserTokenRequestDto userTokenRequestDto  = _mapper.map(otpRequestDto, UserTokenRequestDto.class);			
+			UserTokenRequestDto userTokenRequestDto  = new UserTokenRequestDto();
+			userTokenRequestDto.setUserName(otpRequestDto.getMobilenumber());//_mapper.map(otpRequestDto, UserTokenRequestDto.class);			
 			userTokenRequestDto.setClientIp(request.getRemoteAddr());
 			
 			// return access token
