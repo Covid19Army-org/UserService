@@ -15,4 +15,5 @@ public interface UserRepository extends PagingAndSortingRepository<User, Long> {
 
 	boolean existsByMobilenumber(String mobileNumber);
 	Optional<User> findByMobilenumber(String mobileNumber);
+	boolean existsByMobilenumberAndIsmobileverifiedIsTrue(String mobileNumber);
 }

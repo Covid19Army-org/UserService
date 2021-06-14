@@ -90,6 +90,7 @@ public class UserController {
 		 TokenDto data = null;
 		var result = _otpServiceClient.validateOtp(otpRequestDto);
 		if(result) {
+			_userService.updateIsMobileVerified(otpRequestDto.getMobilenumber());
 			UserTokenRequestDto userTokenRequestDto  = new UserTokenRequestDto();
 			userTokenRequestDto.setUserName(otpRequestDto.getMobilenumber());//_mapper.map(otpRequestDto, UserTokenRequestDto.class);			
 			userTokenRequestDto.setClientIp(request.getRemoteAddr());

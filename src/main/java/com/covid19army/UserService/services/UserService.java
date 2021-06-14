@@ -9,6 +9,7 @@ import com.covid19army.UserService.models.User;
 import com.covid19army.UserService.repositories.UserRepository;
 import com.covid19army.core.dtos.MobileVerificationQueueDto;
 import com.covid19army.core.dtos.OtpVerificationRequestDto;
+import com.covid19army.core.exceptions.ResourceNotFoundException;
 import com.covid19army.core.mex.rabbitmq.RabbitMQSender;
 
 import java.util.Optional;
@@ -29,6 +30,10 @@ public class UserService {
 	public boolean userExists(String mobileNumber) {
 		return _userRepository.findByMobilenumber(mobileNumber) != null;
 	}	
+	
+	public boolean isUserMobileVerified(String mobileNumber) {
+		return _userRepository.existsByMobilenumberAndIsmobileverifiedIsTrue(mobileNumber);
+	}
 	
 	public Optional<User> getUserByMobileNumber(String mobileNumber) {
 		return _userRepository.findByMobilenumber(mobileNumber);		
@@ -55,5 +60,16 @@ public class UserService {
 		_otpExchangeSender.<MobileVerificationQueueDto>send(otpdto);
 		
 		return user;
+	}
+	
+	public void updateIsMobileVerified(String mobileNumber) throws ResourceNotFoundException {
+		if(!this.isUserMobileVerified(mobileNumber)) {
+			var userObject = getUserByMobileNumber(mobileNumber);
+			if(userObject.isEmpty())
+				throw new ResourceNotFoundException("User not found.");
+			var user = userObject.get();
+			user.setIsmobileverified(true);
+			_userRepository.save(user);
+		}
 	}
 }
