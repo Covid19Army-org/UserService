@@ -47,8 +47,15 @@ public class User implements Serializable {
 	private boolean isvolunteer;
 
 	private String mobilenumber;
+	
+	private String passcode;	
 
 	private String name;	
+	
+	private int loginattempt;	
+	
+	@Column(name="date_last_failed_login")
+	private long dateLastFailedLogin; 
 
 	public User() {
 	}
@@ -132,6 +139,14 @@ public class User implements Serializable {
 	public void setMobilenumber(String mobilenumber) {
 		this.mobilenumber = mobilenumber;
 	}
+	
+	public String getPasscode() {
+		return passcode;
+	}
+
+	public void setPasscode(String passcode) {
+		this.passcode = passcode;
+	}
 
 	public String getName() {
 		return this.name;
@@ -139,5 +154,21 @@ public class User implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
-	}	
+	}
+
+	public int getLoginattempt() {
+		return loginattempt;
+	}
+
+	public void setLoginattempt(int loginattempt) {
+		this.loginattempt = loginattempt;
+	}
+
+	public long getDateLastFailedLogin() {
+		return dateLastFailedLogin;
+	}
+
+	public void setDateLastFailedLogin(long dateLastFailedLogin) {
+		this.dateLastFailedLogin = dateLastFailedLogin;
+	}		
 }

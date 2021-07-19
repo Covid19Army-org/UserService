@@ -25,8 +25,10 @@ import com.covid19army.UserService.dtos.UserTokenRequestDto;
 import com.covid19army.UserService.dtos.ValidateOtpRequestDto;
 import com.covid19army.UserService.models.User;
 import com.covid19army.UserService.services.UserService;
+import com.covid19army.UserService.services.UserSessionService;
 import com.covid19army.core.common.clients.OtpServiceClient;
 import com.covid19army.core.dtos.OtpVerificationRequestDto;
+import com.covid19army.core.exceptions.NotAuthorizedException;
 import com.covid19army.core.exceptions.ResourceNotFoundException;
 import com.covid19army.core.extensions.HttpServletRequestExtension;
 
@@ -52,6 +54,9 @@ public class UserController {
 	@Autowired
 	HttpServletRequestExtension _requestExtension;
 	
+	@Autowired
+	UserSessionService _userSessionService;
+	
 	@GetMapping("/health")
 	public String health() {
 		return "am running!";
@@ -63,12 +68,17 @@ public class UserController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<UserResponseDto> findOrCreateUser(@RequestBody LoginRequestDto loginRequestDto,  HttpServletRequest request){
+	public ResponseEntity<UserResponseDto> findOrCreateUser(@RequestBody LoginRequestDto loginRequestDto,  HttpServletRequest request) throws ResourceNotFoundException, NotAuthorizedException{
 		logger.info("mobile number entered is: " + loginRequestDto.getMobileNumber());
-		User user = _userService.login(loginRequestDto.getMobileNumber(), request.getRemoteAddr());
-		
+		User user = _userService.login(loginRequestDto, request.getRemoteAddr());
+		var otpResponse = _userService.generateOtp(user);
 		UserResponseDto userDto = _mapper.map(user, UserResponseDto.class);
-		
+		if(otpResponse != null) {
+			userDto.setOtp(otpResponse.getOtp());
+			var userSession = _userSessionService.create(user.getUserid(), user.getMobilenumber(), userDto.getOtp());
+			if(userSession != null)
+				userDto.setLoginRequestId(userSession.getLoginrequestid());
+		}
 		return new ResponseEntity<>(userDto, HttpStatus.OK);
 	}
 	
@@ -87,21 +97,8 @@ public class UserController {
 	public TokenDto validateOtp(@RequestBody OtpVerificationRequestDto otpRequestDto, HttpServletRequest request) 
 			throws ResourceNotFoundException{
 		//call otp validation client api
-		 TokenDto data = null;
-		var result = _otpServiceClient.validateOtp(otpRequestDto);
-		if(result) {
-			_userService.updateIsMobileVerified(otpRequestDto.getMobilenumber());
-			UserTokenRequestDto userTokenRequestDto  = new UserTokenRequestDto();
-			userTokenRequestDto.setUserName(otpRequestDto.getMobilenumber());//_mapper.map(otpRequestDto, UserTokenRequestDto.class);			
-			userTokenRequestDto.setClientIp(request.getRemoteAddr());
-			
-			// return access token
-			  data = _tokenServiceClient.GetToken(userTokenRequestDto);
-			 logger.info(data.getToken());
-			 return data;
-		}
-		
-		throw new ResourceNotFoundException("Invaid Otp.");
+		 TokenDto data = _userService.validateOtp(otpRequestDto, request.getRemoteAddr());
+		 return data;
 		
 	}
 }
